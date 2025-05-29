@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaundryZone - Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .floating-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+
+        .shape:nth-child(1) {
+            width: 100px;
+            height: 100px;
+            top: 20%;
+            left: 10%;
+            animation-delay: -2s;
+        }
+
+        .shape:nth-child(2) {
+            width: 150px;
+            height: 150px;
+            top: 60%;
+            right: 15%;
+            animation-delay: -8s;
+        }
+
+        .shape:nth-child(3) {
+            width: 80px;
+            height: 80px;
+            bottom: 30%;
+            left: 20%;
+            animation-delay: -15s;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+            100% { transform: translateY(0px) rotate(360deg); }
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 800;
+            text-align: center;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 0.9rem;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-btn.active {
+            background: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            position: relative;
+            z-index: 5;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .menu-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .menu-card .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .menu-card h3 {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .menu-card p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: white;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: white;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #54a0ff, #2e86de);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #5f27cd, #00d2d3);
+        }
+
+        .btn-back {
+            background: linear-gradient(45deg, #636e72, #2d3436);
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .data-table th {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-weight: 700;
+        }
+
+        .data-table td {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .data-table tr:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-proses {
+            background: linear-gradient(45deg, #feca57, #ff9ff3);
+            color: #333;
+        }
+
+        .status-selesai {
+            background: linear-gradient(45deg, #48dbfb, #0abde3);
+            color: white;
+        }
+
+        .status-dibayar {
+            background: linear-gradient(45deg, #1dd1a1, #10ac84);
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(45deg, #1dd1a1, #10ac84);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-tabs {
+                gap: 0.5rem;
+            }
+            
+            .tab-btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.8rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🧺 Laundry Katchaw</h1>
+            <div class="nav-tabs">
+                <button class="tab-btn active" onclick="showMainMenu()">🏠 Menu Utama</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Main Menu -->
+            <div id="mainMenu" class="tab-content active">
+                <div class="menu-grid">
+                    <div class="menu-card" onclick="showDashboard()">
+                        <div class="icon">📊</div>
+                        <h3>Dashboard</h3>
+                        <p>Lihat ringkasan dan statistik bisnis laundry</p>
+                    </div>
+                    <div class="menu-card" onclick="showPelanggan()">
+                        <div class="icon">👥</div>
+                        <h3>Pelanggan</h3>
+                        <p>Kelola data pelanggan dan informasi kontak</p>
+                    </div>
+                    <div class="menu-card" onclick="showPesanan()">
+                        <div class="icon">📦</div>
+                        <h3>Pesanan</h3>
+                        <p>Buat dan kelola pesanan laundry</p>
+                    </div>
+                    <div class="menu-card" onclick="showLayanan()">
+                        <div class="icon">🔧</div>
+                        <h3>Layanan</h3>
+                        <p>Atur jenis layanan dan harga</p>
+                    </div>
+                    <div class="menu-card" onclick="showKaryawan()">
+                        <div class="icon">👨‍💼</div>
+                        <h3>Karyawan</h3>
+                        <p>Kelola data dan gaji karyawan</p>
+                    </div>
+                    <div class="menu-card" onclick="showKeuangan()">
+                        <div class="icon">💰</div>
+                        <h3>Keuangan</h3>
+                        <p>Laporan keuangan dan pendapatan</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Section -->
+            <div id="dashboard" class="tab-content">
+                <button class="btn btn-back" onclick="showMainMenu()">← Kembali ke Menu Utama</button>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalOrders">0</div>
+                        <div class="stat-label">Total Pesanan</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalCustomers">0</div>
+                        <div class="stat-label">Pelanggan Aktif</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="monthlyRevenue">Rp 0</div>
+                        <div class="stat-label">Pendapatan Bulan Ini</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalEmployees">0</div>
+                        <div class="stat-label">Staff Aktif</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>📋 Pesanan Terbaru</h2>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Pelanggan</th>
+                                <th>Layanan</th>
+                                <th>Berat (kg)</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboardOrderTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pelanggan Section -->
+            <div id="pelanggan" class="tab-content">
+                <button class="btn btn-back" onclick="showMainMenu()">← Kembali ke Menu Utama</button>
+                <div class="card">
+                    <h2>➕ Tambah Pelanggan Baru</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nama Lengkap</label>
+                            <input type="text" class="form-control" id="customerName" placeholder="Masukkan nama lengkap">
+                        </div>
+                        <div class="form-group">
+                            <label>No. Telepon</label>
+                            <input type="tel" class="form-control" id="customerPhone" placeholder="08xxxxxxxxxx">
+                        </div>
+                        <div class="form-group">
+                            <label>Alamat</label>
+                            <input type="text" class="form-control" id="customerAddress" placeholder="Alamat lengkap">
+                        </div>
+                        <div class="form-group">
+                            <label>Poin Awal</label>
+                            <input type="number" class="form-control" id="customerPoints" placeholder="0" value="0">
+                        </div>
+                    </div>
+                    <button class="btn" onclick="addCustomer()">🎯 Tambah Pelanggan</button>
+                </div>
+
+                <div class="card">
+                    <h2>👥 Daftar Pelanggan</h2>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nama</th>
+                                <th>Telepon</th>
+                                <th>Alamat</th>
+                                <th>Poin</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pesanan Section -->
+            <div id="pesanan" class="tab-content">
+                <button class="btn btn-back" onclick="showMainMenu()">← Kembali ke Menu Utama</button>
+                <div class="card">
+                    <h2>📦 Buat Pesanan Baru</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Pilih Pelanggan</label>
+                            <select class="form-control" id="orderCustomer">
+                                <option value="">Pilih Pelanggan</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Jenis Layanan</label>
+                            <select class="form-control" id="orderService">
+                                <option value="">Pilih Layanan</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Berat (kg)</label>
+                            <input type="number" class="form-control" id="orderWeight" placeholder="0.0" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>Metode Pembayaran</label>
+                            <select class="form-control" id="orderPayment">
+                                <option value="Cash">Cash</option>
+                                <option value="Transfer Bank">Transfer Bank</option>
+                                <option value="E-Wallet">E-Wallet</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-success" onclick="createOrder()">🚀 Buat Pesanan</button>
+                </div>
+
+                <div class="card">
+                    <h2>📋 Daftar Pesanan</h2>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID Pesanan</th>
+                                <th>Tanggal</th>
+                                <th>Pelanggan</th>
+                                <th>Layanan</th>
+                                <th>Berat</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Layanan Section -->
+            <div id="layanan" class="tab-content">
+                <button class="btn btn-back" onclick="showMainMenu()">← Kembali ke Menu Utama</button>
+                <div class="card">
+                    <h2>🔧 Kelola Jenis Layanan</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nama Layanan</label>
+                            <input type="text" class="form-control" id="serviceName" placeholder="Contoh: Cuci Express">
+                        </div>
+                        <div class="form-group">
+                            <label>Harga per KG</label>
+                            <input type="number" class="form-control" id="servicePrice" placeholder="15000">
+                        </div>
+                        <div class="form-group">
+                            <label>Estimasi Waktu (jam)</label>
+                            <input type="number" class="form-control" id="serviceTime" placeholder="24">
+                        </div>
+                    </div>
+                    <button class="btn" onclick="addService()">✨ Tambah Layanan</button>
+                </div>
+
+                <div class="card">
+                    <h2>📋 Daftar Layanan</h2>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nama Layanan</th>
+                                <th>Harga/kg</th>
+                                <th>Estimasi Waktu</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="serviceTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Karyawan Section -->
+            <div id="karyawan" class="tab-content">
+                <button class="btn btn-back" onclick="showMainMenu()">← Kembali ke Menu Utama</button>
+                <div class="card">
+                    <h2>👨‍💼 Kelola Karyawan</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nama Karyawan</label>
+                            <input type="text" class="form-control" id="employeeName" placeholder="Nama lengkap">
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select class="form-control" id="employeeStatus">
+                                <option value="Tetap">Tetap</option>
+                                <option value="Magang">Magang</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Gaji/Durasi</label>
+                            <input type="text" class="form-control" id="employeeSalary" placeholder="3000000 atau 3 bulan">
+                        </div>
+                        <div class="form-group">
+                            <label>No. Telepon</label>
+                            <input type="tel" class="form-control" id="employeePhone" placeholder="08xxxxxxxxxx">
+                        </div>
+                    </div>
+                    <button class="btn" onclick="addEmployee()">👤 Tambah Karyawan</button>
+                </div>
+
+                <div class="card">
+                    <h2>👥 Daftar Karyawan</h2>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nama</th>
+                                <th>Status</th>
+                                <th>Gaji/Durasi</th>
+                                <th>Telepon</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeeTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Keuangan Section -->
+            <div id="keuangan" class="tab-content">
+                <button class="btn btn-back" onclick="showMainMenu()">← Kembali ke Menu Utama</button>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalRevenue">Rp 0</div>
+                        <div class="stat-label">Total Pendapatan</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalExpense">Rp 0</div>
+                        <div class="stat-label">Total Pengeluaran</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="netProfit">Rp 0</div>
+                        <div class="stat-label">Laba Bersih</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="thisMonth">Rp 0</div>
+                        <div class="stat-label">Bulan Ini</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>💰 Buat Laporan Keuangan</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Tanggal Laporan</label>
+                            <input type="date" class="form-control" id="reportDate">
+                        </div>
+                        <div class="form-group">
+                            <label>Pendapatan</label>
+                            <input type="number" class="form-control" id="reportRevenue" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Pengeluaran</label>
+                            <input type="number" class="form-control" id="reportExpense" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Keterangan</label>
+                            <input type="text" class="form-control" id="reportNote" placeholder="Catatan laporan">
+                        </div>
+                    </div>
+                    <button class="btn" onclick="generateReport()">📊 Buat Laporan</button>
+                </div>
+
+                <div class="card">
+                    <h2>📈 Riwayat Laporan Keuangan</h2>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Pendapatan</th>
+                                <th>Pengeluaran</th>
+                                <th>Laba Bersih</th>
+                                <th>Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification">
+        <span id="notificationText">Operasi berhasil!</span>
+    </div>
+
+    <script>
+        // Data Management with localStorage
+        class DataManager {
+            static save(key, data) {
+                try {
+                    localStorage.setItem(key, JSON.stringify(data));
+                } catch (error) {
+                    console.warn('LocalStorage not available, using memory storage');
+                }
+            }
+
+            static load(key, defaultValue = []) {
+                try {
+                    const data = localStorage.getItem(key);
+                    return data ? JSON.parse(data) : defaultValue;
+                } catch (error) {
+                    console.warn('LocalStorage not available, using default values');
+                    return defaultValue;
+                }
+            }
+        }
+
+        // Application State
+        let appState = {
+            customers: DataManager.load('customers', []),
+            services: DataManager.load('services', [
+                { id: 'L001', name: 'Cuci Kering', price: 10000, time: 24 },
+                { id: 'L002',
